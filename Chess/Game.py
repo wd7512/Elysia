@@ -72,5 +72,58 @@ def run_Charles():
 
     return Charles_Out
 
+def check_move(move,board):
+
+    old = move[0]
+    new = move[1]
+
+    piece = board[old[0],old[1]]
+
+    if piece > 0:
+        col = 'White'
+    else:
+        col = 'Black'
+
+    if board[new[0],new[1]] > 0 and col == 'White':
+        return [False,'Moving onto own piece']
+    if board[new[0],new[1]] < 0 and col == 'Black':
+        return [False,'Moving onto own piece']
+
+    if abs(piece) == 1: #pawn
+
+        if col == 'Black':
+            
+            if old[0] == 1:
+                viables = [[old[0]+1 ,old[1]],
+                           [old[0]+2 ,old[1]]]
+            else:
+                viables = [[old[0]-1 ,old[1]]]
+                
+        elif col == 'White':
+            
+            if old[0] == 6:
+                viables = [[old[0]-1 ,old[1]],
+                           [old[0]-2 ,old[1]]]
+            else:
+                viables = [[old[0]+1 ,old[1]]]
+
+        if compare(new,viables) == False:
+            return [False,'Illegal Move']
+        else:
+            return [True,'']
+
+            
+        
+    
+def compare(pos,viable_pos):
+    
+    for v_pos in viable_pos:
+        if pos[0] == v_pos[0] and pos[1] == v_pos[1]:
+            return True
+
+    return False
+    
+    
+
 start_game()
 run_game()
