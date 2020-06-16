@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import random
 
 def new_board():
     board = np.zeros((8,8),dtype = int)
@@ -21,4 +22,20 @@ def save_board(board):
 
     f.close()
 
-save_board(new_board())
+def start_game():
+    
+    save_board(new_board())
+
+    p1 = 'White'
+    p2 = 'White'
+    if random.randint(0,1) == 0:
+        p1 = 'Black'
+    else:
+        p2 = 'Black'
+
+    f = open('Colour.csv','w')
+    f.write('Barbra,'+p1+'\n')
+    f.write('Charles,'+p2)
+    f.close()
+
+start_game()
