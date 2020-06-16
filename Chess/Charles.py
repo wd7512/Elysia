@@ -14,18 +14,24 @@ def open_board():
 
     return board
 
-def random_move(board):
-    pieces = []
+def random_move(board,col):
+    white_pieces = []
+    black_pieces = []
     blanks = []
-    
+
     for i in range(8):
         for j in range(8):
             if board[i][j] == 0:
                 blanks.append([i,j])
+            elif board[i][j] > 0:
+                white_pieces.append([i,j])
             else:
-                pieces.append([i,j])
+                black_pieces.append([i,j])
 
-    old_pos = random.choice(pieces)
+    if col == 'White':
+        old_pos = random.choice(white_pieces)
+    else:
+        old_pos = random.choice(black_pieces)
     new_pos = random.choice(blanks)
 
     out = np.zeros((2,2))
@@ -43,7 +49,22 @@ def output_move(move):
         f.write(new_line+'\n')
 
     f.close()
-    
-    
-a = random_move(open_board())
+
+def colour():
+    f = open('Colour.csv','r')
+    data = f.readlines()
+    f.close()
+
+    colours = []
+    for line in data:
+        colours.append(str(line).split(','))
+
+    for line in colours:
+        if line[0] == 'Charles':
+            out = line[1]
+
+    return out
+
+col = colour()
+a = random_move(open_board(),col)
 output_move(a)

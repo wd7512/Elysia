@@ -34,6 +34,7 @@ def start_game():
     else:
         p2 = 'Black'
 
+
     f = open('Colour.csv','w')
     f.write('Barbra,'+p1+'\n')
     f.write('Charles,'+p2)
@@ -50,6 +51,12 @@ def run_game():
 
     
     '''
+
+    Move = run_Charles()
+    
+
+def run_Charles():
+
     os.system('python Charles.py')
     f = open('CharlesMove.csv','r')
     Charles_Out = []
@@ -59,9 +66,11 @@ def run_game():
 
     for i in range(2):
         for j in range(2):
-            Charles_Out[i][j] = int(Charles_Out[i][j])
+            Charles_Out[i][j] = int(float(Charles_Out[i][j]))
 
     print(Charles_Out)
+
+    return Charles_Out
 
 start_game()
 run_game()
