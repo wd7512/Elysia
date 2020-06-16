@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import random
+import os
 
 def new_board():
     board = np.zeros((8,8),dtype = int)
@@ -38,4 +39,29 @@ def start_game():
     f.write('Charles,'+p2)
     f.close()
 
+def run_game():
+    '''
+    f = open('Colour.csv','r')
+    data = f.readlines()
+    f.close()
+    Colour = []
+    for line in data:
+        Colour.append(str(line).split(','))
+
+    
+    '''
+    os.system('python Charles.py')
+    f = open('CharlesMove.csv','r')
+    Charles_Out = []
+    for line in f.readlines():
+        Charles_Out.append(str(line).split(','))
+    f.close()
+
+    for i in range(2):
+        for j in range(2):
+            Charles_Out[i][j] = int(Charles_Out[i][j])
+
+    print(Charles_Out)
+
 start_game()
+run_game()
