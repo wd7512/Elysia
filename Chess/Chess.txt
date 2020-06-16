@@ -4,3 +4,6 @@
 4 = bishop
 5 = queen
 6 = king
+
+positive is white
+negative is black
