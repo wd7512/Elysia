@@ -89,6 +89,11 @@ def check_move(move,board):
     if board[new[0],new[1]] < 0 and col == 'Black':
         return [False,'Moving onto own piece']
 
+
+    if new[0] < 0 or new[0] > 7 or new[1] < 0 or new[1] > 7:
+        return [False,'Move off Board']
+    
+
     if abs(piece) == 1: #pawn
 
         if col == 'Black':
@@ -107,12 +112,65 @@ def check_move(move,board):
             else:
                 viables = [[old[0]+1 ,old[1]]]
 
-        if compare(new,viables) == False:
-            return [False,'Illegal Move']
-        else:
-            return [True,'']
+        
 
+    elif abs(piece) == 2: #rook
+        viables = []
+        Y = [0,1,2,3,4,5,6,7]
+        Y.remove(new[0])
+        X = [0,1,2,3,4,5,6,7]
+        X.remove(new[1])
+
+        for num in Y:
+            viables.append([num,new[1]])
+        for num in X:
+            viables.append([new[0],num])
+
+
+
+    elif abs(piece) == 3: #knight
+        viables = [[old[0]+1,old[1]+2],[old[0]-1,old[1]+2],
+                   [old[0]-2,old[1]+1],[old[0]-2,old[1]-1],
+                   [old[0]+1,old[1]-2],[old[0]-1,old[1]-2],
+                   [old[0]+2,old[1]-1],[old[0]+2,old[1]+1]]
+
+
+    elif abs(piece) == 4: #bishop
+        viables = []
+        Y = old[0]
+        X = old[1]
+
+
+        offset = X - Y
+        addset = X + Y
+        viables = []
+        #Leading Diag
+
+        for i in range(8):
+            X1 = i
+            Y1 = X1 + offset
+            if Y1 <= 7 and Y1 >= 0 and X1 != X:
+                viables.append([Y1,X1])
+
+        #Non-Leading Diag
+        
+        for i in range(8):
+            X1 = i
+            Y1 = addset - X1
+            if Y1 <= 7 and Y1 >= 0 and X1 != X:
+                viables.append([Y1,X1])
+
+                
             
+
+
+        
+
+        
+    if compare(new,viables) == False:
+        return [False,'Illegal Move']
+    else:
+        return [True,'']
         
     
 def compare(pos,viable_pos):
