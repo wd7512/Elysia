@@ -2,6 +2,7 @@ import os
 import numpy as np
 import random
 import os
+import matplotlib.pyplot as plt
 
 def new_board():
     board = np.zeros((8,8),dtype = int)
@@ -23,6 +24,19 @@ def save_board(board):
 
     f.close()
 
+def open_board():
+    board = np.zeros((8,8),dtype = int)
+    with open('Board.csv','r') as f:
+        data = f.readlines()
+
+    for i in range(8):
+        line = data[i]
+        new_line = line.split(',')
+        board[i] = new_line
+
+    return board
+
+    
 def start_game():
     
     save_board(new_board())
@@ -117,22 +131,29 @@ def check_move(move,board):
     elif abs(piece) == 2: #rook
         viables = []
         Y = [0,1,2,3,4,5,6,7]
-        Y.remove(new[0])
+        Y.remove(old[0])
         X = [0,1,2,3,4,5,6,7]
-        X.remove(new[1])
+        X.remove(old[1])
 
         for num in Y:
-            viables.append([num,new[1]])
+            viables.append([num,old[1]])
         for num in X:
-            viables.append([new[0],num])
+            viables.append([old[0],num])
 
 
 
     elif abs(piece) == 3: #knight
-        viables = [[old[0]+1,old[1]+2],[old[0]-1,old[1]+2],
+        all_viables = [[old[0]+1,old[1]+2],[old[0]-1,old[1]+2],
                    [old[0]-2,old[1]+1],[old[0]-2,old[1]-1],
                    [old[0]+1,old[1]-2],[old[0]-1,old[1]-2],
                    [old[0]+2,old[1]-1],[old[0]+2,old[1]+1]]
+
+        viables = []
+        for via in all_viables:
+            if via[0]<0 or via[1]<0:
+                pass
+            else:
+                viables.append(via)
 
 
     elif abs(piece) == 4: #bishop
@@ -148,7 +169,7 @@ def check_move(move,board):
 
         for i in range(8):
             X1 = i
-            Y1 = X1 + offset
+            Y1 = X1 - offset
             if Y1 <= 7 and Y1 >= 0 and X1 != X:
                 viables.append([Y1,X1])
 
@@ -160,11 +181,78 @@ def check_move(move,board):
             if Y1 <= 7 and Y1 >= 0 and X1 != X:
                 viables.append([Y1,X1])
 
-                
+    elif abs(piece) == 5: #queen
+
+        #Bishop
+        viables = []
+        Y = old[0]
+        X = old[1]
+
+
+        offset = X - Y
+        addset = X + Y
+        viables = []
+        #Leading Diag
+
+        for i in range(8):
+            X1 = i
+            Y1 = X1 - offset
+            if Y1 <= 7 and Y1 >= 0 and X1 != X:
+                viables.append([Y1,X1])
+
+        #Non-Leading Diag
+        
+        for i in range(8):
+            X1 = i
+            Y1 = addset - X1
+            if Y1 <= 7 and Y1 >= 0 and X1 != X:
+                viables.append([Y1,X1])
+
+        #Rook
+        Y = [0,1,2,3,4,5,6,7]
+        Y.remove(old[0])
+        X = [0,1,2,3,4,5,6,7]
+        X.remove(old[1])
+
+        for num in Y:
+            viables.append([num,old[1]])
+        for num in X:
+            viables.append([old[0],num])
             
 
+    elif abs(piece) == 6: #King
+        Y = old[0]
+        X = old[1]
+        all_viables = [[Y,X+1],[Y+1,X],
+                   [Y,X-1],[Y-1,X],
+                   [Y+1,X+1],[Y+1,X-1],
+                   [Y-1,X+1],[Y-1,X-1]]
 
+        viables = []
+        for via in all_viables:
+            if via[0]<0 or via[1]<0:
+                pass
+            else:
+                viables.append(via)
+
+            
+
+    else:
+        return [False,'Invalid Piece']
+
+    '''
+    #show viables
+
+    show_board = board.copy()
+    print(old)
+    show_board[old[0]][old[1]] = 100
+    print(viables)
+    for pos in viables:
+        show_board[pos[0]][pos[1]] = 200
         
+    plt.matshow(show_board)
+    plt.show()
+    '''
 
         
     if compare(new,viables) == False:
@@ -180,8 +268,7 @@ def compare(pos,viable_pos):
             return True
 
     return False
-    
+
+
     
 
-start_game()
-run_game()
