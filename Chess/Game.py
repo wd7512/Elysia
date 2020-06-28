@@ -42,31 +42,52 @@ def start_game():
     save_board(new_board())
 
     p1 = 'White'
-    p2 = 'White'
     if random.randint(0,1) == 0:
         p1 = 'Black'
-    else:
-        p2 = 'Black'
+
+    p2 = 'Barbra'
+    if random.randint(0,1) == 0:
+        p2 = 'Charles'
 
 
     f = open('Colour.csv','w')
-    f.write('Barbra,'+p1+'\n')
-    f.write('Charles,'+p2)
+    f.write(p2+','+p1+'\n')
     f.close()
 
-def run_game():
-    '''
-    f = open('Colour.csv','r')
-    data = f.readlines()
-    f.close()
-    Colour = []
-    for line in data:
-        Colour.append(str(line).split(','))
+def run_move():
+    with open('Colour.csv','r') as f:
+        data = f.readlines()
+
+    board = open_board()
+
+    who_goes = data[0].split(',')
+
+    print(who_goes[0]+' move')
+
+    if who_goes[0] == 'Charles':
+        move = run_Charles()
+        
+        
+    elif who_goes[0] == 'Barbra':
+        pass
+    
+    else:
+        print('Unknown Player')
+
+    check = check_move(move,board)
+
+    if check[0] == True:
+        old = board[move[0][0]][move[0][1]]
+        print(old)
+        board[move[0][0]][move[0][1]] = 0
+        board[move[1][0]][move[1][1]] = old
+
+        save_board(board)
+        
+    else:
+        print(check[1]+' '+who_goes[0])
 
     
-    '''
-
-    Move = run_Charles()
     
 
 def run_Charles():
@@ -270,5 +291,6 @@ def compare(pos,viable_pos):
     return False
 
 
-    
+start_game()
+run_move()
 
