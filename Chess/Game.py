@@ -143,7 +143,15 @@ def check_move(move,board):
                 viables = [[old[0]+1 ,old[1]],
                            [old[0]+2 ,old[1]]]
             else:
-                viables = [[old[0]-1 ,old[1]]]
+                viables = [[old[0]+1 ,old[1]]]
+
+            diag1 = board[old[0]+1][old[1]+1]
+            diag2 = board[old[0]+1][old[1]-1]
+
+            if diag1 > 0:
+                viables.append([old[0]+1,old[1]+1])
+            if diag2 > 0:
+                viables.append([old[0]+1,old[1]-1])
                 
         elif col == 'White':
             
@@ -151,9 +159,15 @@ def check_move(move,board):
                 viables = [[old[0]-1 ,old[1]],
                            [old[0]-2 ,old[1]]]
             else:
-                viables = [[old[0]+1 ,old[1]]]
+                viables = [[old[0]-1 ,old[1]]]
 
-        
+            diag1 = board[old[0]-1][old[1]+1]
+            diag2 = board[old[0]-1][old[1]-1]
+
+            if diag1 > 0:
+                viables.append([old[0]-1,old[1]+1])
+            if diag2 > 0:
+                viables.append([old[0]-1,old[1]-1])
 
     elif abs(piece) == 2: #rook
         viables = []
@@ -162,10 +176,23 @@ def check_move(move,board):
         X = [0,1,2,3,4,5,6,7]
         X.remove(old[1])
 
+        stop = False
         for num in Y:
-            viables.append([num,old[1]])
+
+            if board[num][old[1]] != 0:
+                stop = True
+            if stop == False:
+                viables.append([num,old[1]])
+            
+
+        stop = False
         for num in X:
-            viables.append([old[0],num])
+
+            if board[old[0]][num] != 0:
+                stop = True
+            
+            if stop == False:
+                viables.append([old[0],num])
 
 
 
@@ -194,19 +221,29 @@ def check_move(move,board):
         viables = []
         #Leading Diag
 
+        stop = False
         for i in range(8):
             X1 = i
             Y1 = X1 - offset
             if Y1 <= 7 and Y1 >= 0 and X1 != X:
-                viables.append([Y1,X1])
+                if board[Y1][X1] != 0:
+                    stop = True
+                
+                if stop == False:
+                    viables.append([Y1,X1])
 
         #Non-Leading Diag
-        
+        stop = False
         for i in range(8):
-            X1 = i
+            X1 = 7 - i
             Y1 = addset - X1
             if Y1 <= 7 and Y1 >= 0 and X1 != X:
-                viables.append([Y1,X1])
+                
+                if board[Y1][X1] != 0:
+                    stop = True
+                    
+                if stop == False:
+                    viables.append([Y1,X1])
 
     elif abs(piece) == 5: #queen
 
@@ -267,7 +304,7 @@ def check_move(move,board):
     else:
         return [False,'Invalid Piece']
 
-    '''
+    
     #show viables
 
     show_board = board.copy()
@@ -279,7 +316,7 @@ def check_move(move,board):
         
     plt.matshow(show_board)
     plt.show()
-    '''
+    
 
         
     if compare(new,viables) == False:
@@ -296,7 +333,9 @@ def compare(pos,viable_pos):
 
     return False
 
+a = np.zeros((8,8))
+a[3][3] = -1
+a[4][4] = 1
 
-start_game()
-run_move()
+check_move([[3,3],[4,3]],a)
 
