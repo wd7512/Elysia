@@ -17,9 +17,13 @@ def save_board(board):
     f = open('Board.csv','w')
 
     for line in board:
+        
         text = str(line).replace(' ',',')
+
         text = text.replace(']','')
         text = text.replace('[','')
+        text = text.replace(',,',',')
+        print(text)
         f.write(text+'\n')
 
     f.close()
@@ -81,6 +85,8 @@ def run_move():
         print(old)
         board[move[0][0]][move[0][1]] = 0
         board[move[1][0]][move[1][1]] = old
+
+        print(board)
 
         save_board(board)
         
