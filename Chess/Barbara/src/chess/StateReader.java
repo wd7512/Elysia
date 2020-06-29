@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Scanner;
 
 public class StateReader {
-	
 	// reads a file and outputs a game state (a board)
 	
 	private File file;

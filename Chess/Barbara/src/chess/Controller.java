@@ -5,6 +5,7 @@ public class Controller {
 	public AI agent;
 	public StateReader sr;
 	public StateWriter sw;
+	public String path;
 	
 	public static int[][] currentBoard;
 	
@@ -12,26 +13,21 @@ public class Controller {
 		agent = new AI();
 		sr = new StateReader();
 		sw = new StateWriter();
+		path = "State.csv";
 		
 		run();
 	}
 	
 	public void run() {
-		sr.init("State.csv");
+		sr.init(path);
 		sr.read();
 		currentBoard = sr.getBoard();
-		
-		int[][] move = new int[2][2];
-		move[0][0] = 3;
-		move[0][1] = 3;
-		move[1][0] = 4;
-		move[1][1] = 2;
-		
-		Util.printBoard(currentBoard);
-		
 		agent.init(currentBoard);
 		
-		System.out.println(agent.isLegal(-6, move));
+		System.out.println(agent.evaluate(currentBoard));
+		
+		sw.init(path);
+		sw.write(currentBoard);
 	}
 	
 	public static void main(String[] args) {
