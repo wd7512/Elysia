@@ -20,6 +20,18 @@ public class Controller {
 		sr.init("State.csv");
 		sr.read();
 		currentBoard = sr.getBoard();
+		
+		int[][] move = new int[2][2];
+		move[0][0] = 3;
+		move[0][1] = 3;
+		move[1][0] = 4;
+		move[1][1] = 2;
+		
+		Util.printBoard(currentBoard);
+		
+		agent.init(currentBoard);
+		
+		System.out.println(agent.isLegal(-6, move));
 	}
 	
 	public static void main(String[] args) {
