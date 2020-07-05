@@ -194,6 +194,21 @@ def check_move(move,board):
             if stop == False:
                 viables.append([old[0],num])
 
+        '''
+        #new method
+        pos_x = list(range(old[1]+1,8))
+        pos_y = list(range(old[0]+1,8))
+        neg_x = sorted(list(range(0,old[1])),reverse = True) 
+        neg_y = sorted(list(range(0,old[0])),reverse = True) 
+
+        viables = []
+
+
+        stop = 0
+        for num in pos_y:
+            if board[num][old[1]] 
+        '''
+
 
 
     elif abs(piece) == 3: #knight
@@ -333,9 +348,13 @@ def compare(pos,viable_pos):
 
     return False
 
-a = np.zeros((8,8))
-a[3][3] = -1
-a[4][4] = 1
 
-check_move([[3,3],[4,3]],a)
+#pawn works
+#test rook
+a = np.zeros((8,8))
+a[1][3] = 2
+a[1][1] = 1
+
+
+check_move([[1,3],[2,3]],a)
 
