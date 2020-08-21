@@ -1,10 +1,13 @@
 package chess;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class AI {
 	
-	int[][] board;
+	private int[][] board;
+	private HashMap<int[], Integer> takenPieces;
+	private ArrayList<int[][]> moveHistory;
 	
 	/*
 	 * 1 = pawn
@@ -17,29 +20,83 @@ public class AI {
 	
 	public void init(int[][] board) {
 		this.board = board;
+		takenPieces = new HashMap<>();
+		moveHistory = new ArrayList<>();
 	}
 	
-	public float minimax(int[][] state, int depth, int player) {
-		// take a game state and outputs a move
-		if(depth > 0) depth--;
+	public int[][] bestMove(int[][] board, int depth, int white) {
+		float bestScore = -99999 * white;
+		int[][] move = new int[2][2];
 		
-		ArrayList<int[][]> posMoves = new ArrayList<>(); // all the possible moves for the current player
-		ArrayList<int[]> positions = new ArrayList<>(); // the positions of every piece owned by the current player
+		ArrayList<int[][]> posMoves = getAllMoves(white > 0);
 		
-		for(int i = 0; i < 8; i++) {
-			for(int j = 0; j < 8; j++) {
-				int piece = board[j][i];
-				
-				if(piece * player > 0) {
-					int[] pos = {i, j};
-					
-					positions.add(pos);
-					posMoves.addAll(getMoves(pos));
-				}
+		for(int i = 0; i < posMoves.size(); i++) {
+			int[][] currentMove = posMoves.get(i);
+			
+			makeMove(board, currentMove);
+			moveHistory.add(currentMove);
+			float score = minimax(board, depth, white < 0);
+			moveHistory.remove(currentMove);
+			reverseMove(board, currentMove);
+			
+			if(white > 0 && score > bestScore && !similarMoves(moveHistory)) {
+				bestScore = score;
+				move = currentMove;
+			} else if(white < 0 && score < bestScore && !similarMoves(moveHistory)) {
+				bestScore = score;
+				move = currentMove;
 			}
 		}
 		
+		return move;
+	}
+	
+	public float minimax(int[][] state, int depth, boolean maximizing) {
+		// take a game state and outputs a move
 		
+		if(depth == 0 || isOver(state)) {
+			return evaluate(state);
+		}
+		
+		if(maximizing) {
+			ArrayList<int[][]> moves = getAllMoves(true);
+			
+			float bestScore = -99999;
+			
+			for(int i = 0; i < moves.size(); i++) {
+				int[][] move = moves.get(i);
+				
+				makeMove(state, move);
+				moveHistory.add(move);
+				float score = minimax(state, depth - 1, false);
+				moveHistory.remove(move);
+				reverseMove(state, move);
+				
+				if(!similarMoves(moveHistory))
+					bestScore = Math.max(score, bestScore);
+			}
+			
+			return bestScore;
+		} else {
+			ArrayList<int[][]> moves = getAllMoves(false);
+			
+			float bestScore = 99999;
+			
+			for(int i = 0; i < moves.size(); i++) {
+				int[][] move = moves.get(i);
+				
+				makeMove(state, move);
+				moveHistory.add(move);
+				float score = minimax(state, depth - 1, true);
+				moveHistory.remove(move);
+				reverseMove(state, move);
+				
+				if(!similarMoves(moveHistory))
+					bestScore = Math.min(score, bestScore);
+			}
+			
+			return bestScore;
+		}
 	}
 	
 	public float evaluate(int[][] state) {
@@ -118,20 +175,61 @@ public class AI {
 		return materialScore + mobilityScore;
 	}
 	
-	public int[][] makeMove(int[][] board, int[][] move) {
-		int[][] newBoard = board;
-		
+	public void makeMove(int[][] board, int[][] move) {
 		int[] pos1 = move[0];
 		int[] pos2 = move[1];
 		
 		int piece = board[pos1[1]][pos1[0]];
 		
 		if(isLegal(piece, move)) {
-			newBoard[pos1[1]][pos1[0]] = 0;
-			newBoard[pos2[1]][pos2[0]] = piece;
+			if(board[pos2[1]][pos2[0]] != 0) {
+				takenPieces.put(pos2, board[pos2[1]][pos2[0]]);
+			}
+			
+			board[pos1[1]][pos1[0]] = 0;
+			board[pos2[1]][pos2[0]] = piece;
+			
+			moveHistory.add(move);
+		}
+	}
+	
+	public void reverseMove(int[][] board, int[][] move) {
+		int[] pos2 = move[0];
+		int[] pos1 = move[1];
+		
+		int piece = board[pos1[1]][pos1[0]];
+		
+		board[pos1[1]][pos1[0]] = 0;
+		board[pos2[1]][pos2[0]] = piece;
+		
+		if(takenPieces.containsKey(pos1)) {
+			board[pos1[1]][pos1[0]] = takenPieces.get(pos1);
 		}
 		
-		return newBoard;
+		if(moveHistory.contains(move))
+			moveHistory.remove(move);
+	}
+	
+	public ArrayList<int[][]> getAllMoves(boolean white) {
+		ArrayList<int[][]> moves = new ArrayList<>();
+		
+		for(int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				if(white) {
+					if(board[j][i] > 0) {
+						int[] pos = {i, j};
+						moves.addAll(getMoves(pos));
+					}
+				} else {
+					if(board[j][i] < 0) {
+						int[] pos = {i, j};
+						moves.addAll(getMoves(pos));
+					}
+				}
+			}
+		}
+		
+		return moves;
 	}
 	
 	public ArrayList<int[][]> getMoves(int[] pos) {
@@ -167,57 +265,48 @@ public class AI {
 		
 		switch(Math.abs(piece)) {
 		case 1: // pawn
-			if(pos1[0] == pos2[0] && pos1[1] - pos2[1] == 1 * colour) {
-				if(board[pos2[1]][pos2[0]] != 0)
-					return false;
-				
-				return true;
-			}
-			
-			return false;
-		case 2: // rook
-			return checkOrthogonal(pos1, pos2);
-		case 3: // knight
-			if(Math.abs(pos1[0] - pos2[0]) == 1) { // up or down
-				if(pos1[1] - pos2[1] == 2) { // going up
+			if(pos1[0] == pos2[0]) {
+				if(pos1[1] - pos2[1] == 1 * colour) {
 					if(board[pos2[1]][pos2[0]] != 0)
 						return false;
 					
 					return true;
-				} else if(pos1[1] - pos2[1] == -2) { // going down
+				} else if(pos1[1] == 3.5 + 2.5 * colour && pos1[1] - pos2[1] == 2 * colour) {
 					if(board[pos2[1]][pos2[0]] != 0)
 						return false;
 					
 					return true;
 				}
-			} else if(Math.abs(pos1[1] - pos2[1]) == 1) { // left or right
-				if(pos1[0] - pos2[0] == 2) { // going left
-					if(board[pos2[1]][pos2[0]] != 0)
-						return false;
-					
-					return true;
-				} else if(pos1[0] - pos2[0] == -2) { // going right
-					if(board[pos2[1]][pos2[0]] != 0)
-						return false;
-					
-					return true;
+			}
+			
+			if(Math.abs(pos1[0] - pos2[0]) == 1 && pos1[1] - pos2[1] == 1 * colour && canTake(pos2[0], pos2[1], colour))
+				return true;
+			
+			return false;
+		case 2: // rook
+			return checkOrthogonal(pos1, pos2, colour);
+		case 3: // knight
+			if(Math.abs(pos1[0] - pos2[0]) == 1) {
+				if(Math.abs(pos1[1] - pos2[1]) == 2) {
+					return isEmpty(pos2[0], pos2[1]) | canTake(pos2[0], pos2[1], colour);
+				}
+			} else if(Math.abs(pos1[1] - pos2[1]) == 1) {
+				if(Math.abs(pos1[0] - pos2[0]) == 2) {
+					return isEmpty(pos2[0], pos2[1]) | canTake(pos2[0], pos2[1], colour);
 				}
 			}
 			
 			return false;
 		case 4: // bishop
-			return checkDiagonal(pos1, pos2);
+			return checkDiagonal(pos1, pos2, colour);
 		case 5: // queen
-			return checkOrthogonal(pos1, pos2) ^ checkDiagonal(pos1, pos2);
+			return checkOrthogonal(pos1, pos2, colour) ^ checkDiagonal(pos1, pos2, colour);
 		case 6: // king
 			int dX = pos1[0] - pos2[0];
 			int dY = pos1[1] - pos2[1];
 			
 			if(Math.abs(dX) <= 1 && Math.abs(dY) <= 1) {
-				if(board[pos2[1]][pos2[0]] != 0)
-					return false;
-				
-				return true;
+				return isEmpty(pos2[0], pos2[1]) | canTake(pos2[0], pos2[1], colour);
 			}
 			
 			return false;
@@ -226,41 +315,65 @@ public class AI {
 		return false;
 	}
 	
-	private boolean checkOrthogonal(int[] pos1, int[] pos2) {
+	private boolean isEmpty(int x, int y) {
+		return board[y][x] == 0; // returns true if empty
+	}
+	
+	private boolean canTake(int x, int y, int colour) {
+		return board[y][x] * colour < 0; // returns true if different colours
+	}
+	
+	private boolean checkOrthogonal(int[] pos1, int[] pos2, int colour) {
 		if(pos1[0] == pos2[0]) {
 			if(pos1[1] > pos2[1]) { // going up
-				for(int i = pos1[1] - 1; i >= pos2[1]; i--) {
-					if(board[i][pos1[0]] != 0)
+				for(int i = pos1[1] - 1; i > pos2[1]; i--) {
+					if(!isEmpty(pos2[0], i))
 						return false;
 				}
+				
+				if(isEmpty(pos2[0], pos2[1]) || canTake(pos2[0], pos2[1], colour))
+					return true;
+				else
+					return false;
 			} else { // going down
-				for(int i = pos1[1] + 1; i <= pos2[1]; i++) {
-					if(board[i][pos1[0]] != 0)
+				for(int i = pos1[1] + 1; i < pos2[1]; i++) {
+					if(!isEmpty(pos2[0], i))
 						return false;
 				}
+				
+				if(isEmpty(pos2[0], pos2[1]) || canTake(pos2[0], pos2[1], colour))
+					return true;
+				else
+					return false;
 			}
-			
-			return true;
 		} else if(pos1[1] == pos2[1]) {
 			if(pos1[0] > pos2[0]) { // going left
-				for(int i = pos1[0] - 1; i >= pos2[0]; i--) {
-					if(board[pos1[1]][i] != 0)
+				for(int i = pos1[0] - 1; i > pos2[0]; i--) {
+					if(!isEmpty(i, pos2[1]))
 						return false;
 				}
+				
+				if(isEmpty(pos2[0], pos2[1]) || canTake(pos2[0], pos2[1], colour))
+					return true;
+				else
+					return false;
 			} else { // going right
-				for(int i = pos1[0] + 1; i <= pos2[0]; i++) {
-					if(board[pos1[1]][i] != 0)
+				for(int i = pos1[0] + 1; i < pos2[0]; i++) {
+					if(!isEmpty(i, pos2[1]))
 						return false;
 				}
+				
+				if(isEmpty(pos2[0], pos2[1]) || canTake(pos2[0], pos2[1], colour))
+					return true;
+				else
+					return false;
 			}
-			
-			return true;
 		}
 		
 		return false;
 	}
 	
-	private boolean checkDiagonal(int[] pos1, int[] pos2) {
+	private boolean checkDiagonal(int[] pos1, int[] pos2, int colour) {
 		int dX = pos1[0] - pos2[0];
 		int dY = pos1[1] - pos2[1];
 		
@@ -269,25 +382,72 @@ public class AI {
 			
 			if(dY > 0) { // up
 				int x = pos1[0] + (1 * xDir);
-				for(int y = pos1[1] - 1; y >= pos2[1]; y--) {
-					if(board[y][x] != 0)
+				for(int y = pos1[1] - 1; y > pos2[1]; y--) {
+					if(!isEmpty(x, y))
 						return false;
 						
 					x += 1 * xDir;
 				}
+				
+				if(isEmpty(pos2[0], pos2[1]) || canTake(pos2[0], pos2[1], colour))
+					return true;
+				else
+					return false;
 			} else { // down
 				int x = pos1[0] + (1 * xDir);
-				for(int y = pos1[1] + 1; y <= pos2[1]; y++) {
-					if(board[y][x] != 0)
+				for(int y = pos1[1] + 1; y < pos2[1]; y++) {
+					if(!isEmpty(x, y))
 						return false;
 					
 					x += 1 * xDir;
 				}
+				
+				if(isEmpty(pos2[0], pos2[1]) || canTake(pos2[0], pos2[1], colour))
+					return true;
+				else
+					return false;
 			}
-			
-			return true;
 		}
 		
 		return false;
+	}
+	
+	private boolean isOver(int[][] state) {
+		int nKings = 0;
+		
+		for(int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				if(Math.abs(state[i][j]) == 6)
+					nKings++;
+			}
+		}
+		
+		if(nKings == 2)
+			return false;
+		else
+			return true;
+	}
+	
+	public boolean similarMoves(ArrayList<int[][]> moveHistory) {
+		int length = moveHistory.size();
+		int inARow = 0;
+		
+		if(length >= 20) {
+			int[][] m = moveHistory.get(length - 1);
+			
+			for(int i = length - 2; i > length - 20; i--) {
+				if(inARow == 3)
+					return true;
+				
+				if(sameMove(m, moveHistory.get(i)))
+					inARow++;
+			}
+		}
+		
+		return false;
+	}
+	
+	private boolean sameMove(int[][] m1, int[][] m2) {
+		return m1[0][0] == m2[0][0] && m1[0][1] == m2[0][1] && m1[1][0] == m2[1][0] && m1[1][1] == m2[1][1];
 	}
 }

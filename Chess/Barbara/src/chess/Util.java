@@ -22,5 +22,11 @@ public class Util {
 			
 			System.out.println();
 		}
+		
+		System.out.println();
+	}
+	
+	public static void printMove(int[][] move) {
+		System.out.println(move[0][0] + " " + move[0][1] + " -> " + move[1][0] + " " + move[1][1]);
 	}
 }
